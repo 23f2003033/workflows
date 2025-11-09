@@ -1,0 +1,47 @@
+name: Matrix Build & Artifact Challenge
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  matrix-build:
+    name: Build - ${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Ensures one failure doesn't cancel the other running parallel jobs
+      fail-fast: false
+      matrix:
+        # Defining 3+ variants as required
+        variant: [dev, staging, prod, feature-alpha]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- REQUIRED IDENTIFIER STEP ---
+      - name: matrix-91668e7
+        id: matrix-91668e7
+        run: |
+          echo "Starting build for variant: ${{ matrix.variant }}"
+          echo "Build ID: $GITHUB_RUN_ID"
+
+      # Generate a unique, non-empty file for this specific matrix run
+      - name: Generate Build Artifact
+        run: |
+          mkdir -p dist
+          echo "Build Configuration: ${{ matrix.variant }}" > dist/build-info.txt
+          echo "Timestamp: $(date -u)" >> dist/build-info.txt
+          echo "Runner OS: $RUNNER_OS" >> dist/build-info.txt
+          echo "Content verified for variant ${{ matrix.variant }}" >> dist/build-info.txt
+
+      # --- REQUIRED ARTIFACT UPLOAD ---
+      # Uploads the artifact with the specific prefix required by the challenge
+      - name: Upload Matrix Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # Name format: build-91668e7-<variant>
+          name: build-91668e7-${{ matrix.variant }}
+          path: dist/build-info.txt
+          retention-days: 5
