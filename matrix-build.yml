@@ -1,47 +1,35 @@
-name: Matrix Build & Artifact Challenge
+name: Multi-Platform Matrix Build with Artifacts
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  pull_request:
 
 jobs:
-  matrix-build:
-    name: Build - ${{ matrix.variant }}
+  build:
+    name: Matrix Build - Node.js Versions
     runs-on: ubuntu-latest
     strategy:
-      # Ensures one failure doesn't cancel the other running parallel jobs
-      fail-fast: false
       matrix:
-        # Defining 3+ variants as required
-        variant: [dev, staging, prod, feature-alpha]
-
+        version: [14, 16, 18]  # 3 matrix variants
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- REQUIRED IDENTIFIER STEP ---
+      - name: Set up Node.js ${{ matrix.version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+
       - name: matrix-91668e7
-        id: matrix-91668e7
-        run: |
-          echo "Starting build for variant: ${{ matrix.variant }}"
-          echo "Build ID: $GITHUB_RUN_ID"
+        run: echo "Building for Node version ${{ matrix.version }}"
 
-      # Generate a unique, non-empty file for this specific matrix run
-      - name: Generate Build Artifact
+      - name: Generate build artifact
         run: |
-          mkdir -p dist
-          echo "Build Configuration: ${{ matrix.variant }}" > dist/build-info.txt
-          echo "Timestamp: $(date -u)" >> dist/build-info.txt
-          echo "Runner OS: $RUNNER_OS" >> dist/build-info.txt
-          echo "Content verified for variant ${{ matrix.variant }}" >> dist/build-info.txt
+          echo "Build output for Node version ${{ matrix.version }}" > output-${{ matrix.version }}.txt
+          echo "Generated on $(date)" >> output-${{ matrix.version }}.txt
+          cat output-${{ matrix.version }}.txt
 
-      # --- REQUIRED ARTIFACT UPLOAD ---
-      # Uploads the artifact with the specific prefix required by the challenge
-      - name: Upload Matrix Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          # Name format: build-91668e7-<variant>
-          name: build-91668e7-${{ matrix.variant }}
-          path: dist/build-info.txt
-          retention-days: 5
+          na
